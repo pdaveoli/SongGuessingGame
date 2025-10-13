@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$/../songGuessingGame">
+      <excludeFolder url="file://$MODULE_DIR$/../songGuessingGame/.idea/inspectionProfiles" />
+      <excludeFolder url="file://$MODULE_DIR$/../songGuessingGame/.tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/../songGuessingGame/temp" />
+      <excludeFolder url="file://$MODULE_DIR$/../songGuessingGame/tmp" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

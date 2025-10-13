@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {FaSpotify} from "react-icons/fa";
 
 export function SignUpForm({
   className,
@@ -56,6 +57,28 @@ export function SignUpForm({
     }
   };
 
+  const handleSpotifySignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const supabase = createClient();
+    setIsLoading(true);
+    setError(null);
+    try {
+        const {error} = await supabase.auth.signInWithOAuth({
+            'provider': 'spotify',
+            'options': {
+                'scopes': 'user-read-email playlist-read-private user-library-read user-top-read user-read-recently-played user-library-read',
+                'redirectTo': `${window.location.origin}/protected`
+            },
+        });
+        if (error) throw error;
+        router.push("/auth/sign-up-success");
+    } catch (error: unknown) {
+        // Handle error if needed
+        setError(error instanceof Error ? error.message : "An error occurred");
+    }
+  }
+
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -64,6 +87,18 @@ export function SignUpForm({
           <CardDescription>Create a new account</CardDescription>
         </CardHeader>
         <CardContent>
+            <>
+                <form onSubmit={handleSpotifySignUp}>
+                    <div className="flex flex-col gap-6 mb-3">
+                        <Button
+                            type="submit"
+                            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-2 py-2 font-bold text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-[#1ed760]">
+                            <FaSpotify size={24} />
+                            <span>Sign up with Spotify</span>
+                        </Button>
+                    </div>
+                </form>
+                <p className="text-sm text-center font-light italic mb-3">or</p>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
@@ -113,6 +148,7 @@ export function SignUpForm({
               </Link>
             </div>
           </form>
+            </>
         </CardContent>
       </Card>
     </div>
