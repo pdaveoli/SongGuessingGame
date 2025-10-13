@@ -307,7 +307,7 @@ export default function ClassicGamePage() {
                                         <p>{timeLeft} seconds left</p>
                                         </>
                                     ) : (
-                                        <Button className="p-0" onClick={startPlayback}>
+                                        <Button className="p-0" onClick={() => startPlayback(true)}>
                                             Play
                                         </Button>
                                     )}
