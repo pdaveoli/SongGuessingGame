@@ -8,6 +8,7 @@ import {useRouter} from "next/navigation";
 import {useEffect, useState} from "react";
 import {SpotifyTrack} from "@/types/spotifyT";
 import {getRandomUserSavedTracks} from "@/lib/spotify";
+import Link from "next/link";
 
 export default function ProtectedPage() {
     const { user, profile, loading, spotifyAccessToken, refreshSession } = useApp();
@@ -41,6 +42,23 @@ export default function ProtectedPage() {
         if (savedTracks == null) return;
         setSavedTracks(savedTracks);
         console.log(savedTracks);
+    }
+
+    const logout = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const supabase = createClient();
+        // Get user session
+        const {data: user, error} = await supabase.auth.getUser();
+        if (!user || error) {
+            router.push("/")
+        }
+        const {error: err2} = await supabase.auth.signOut();
+
+        if (err2) {
+            console.error(err2);
+            router.push("/");
+        }
+
     }
 
 
@@ -94,15 +112,12 @@ export default function ProtectedPage() {
                                 </form>
                             </div>
                         )}
-                        {profile && (
-                            <>
-                                <p className="mb-2"><span className="font-bold">Full Name:</span> {profile.full_name}
-                                </p>
-                                <p className="mb-2"><span className="font-bold">Username:</span> {profile.username}</p>
-                                <p className="mb-2"><span className="font-bold">Avatar URL:</span> {profile.avatar_url}
-                                </p>
-                            </>
-                        )}
+                        <Button asChild>
+                            <Link href="/games/classic">Play Game</Link>
+                        </Button>
+                        <Button onClick={logout}>
+                            Log out
+                        </Button>
                     </div>
                 </div>
             </div>

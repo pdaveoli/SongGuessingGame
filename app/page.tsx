@@ -7,8 +7,24 @@ import { ConnectSupabaseSteps } from "@/components/tutorial/connect-supabase-ste
 import { SignUpUserSteps } from "@/components/tutorial/sign-up-user-steps";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
+import {createClient} from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home() {
+
+    const checkAccount = async () => {
+            const supabase = await createClient();
+            const {data, error} = await supabase.auth.getUser();
+            if (data === null || error) {
+                // Not logged in
+                console.log("Not logged in");
+                return;
+            }
+
+            // User is logged in, redirect to protected
+            redirect("/protected");
+    }
+    await checkAccount();
   return (
     <main className="min-h-screen flex flex-col items-center">
       <div className="flex-1 w-full flex flex-col gap-20 items-center">

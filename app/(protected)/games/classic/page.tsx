@@ -40,6 +40,7 @@ export default function ClassicGamePage() {
 
     const startNewGame = async () => {
         setIsLoading(true);
+        setGameState("playing");
         // Initialize a new game session
         const newSession: GameSession = {
             tracks: [], // Amount of tracks will be set when fetching from Spotify
@@ -88,7 +89,6 @@ export default function ClassicGamePage() {
             }));
 
             setGameSession(newSession);
-            setGameState("playing");
             // Start the first round
             await newRound(newSession);
         } catch (error) {
@@ -157,8 +157,55 @@ export default function ClassicGamePage() {
 
     const trackNameClean = (name: string) => {
         // Remove content in parentheses and brackets, and trim whitespace
-        return name.replace(/ *\([^)]*\) */g, "").replace(/ *\[[^\]]*]/, "").trim().toLowerCase();
+        return name
+            // Remove content in parentheses (e.g., "Song (feat. Artist)")
+            .replace(/ *\([^)]*\) */g, "")
+            // Remove content in brackets (e.g., "Song [Remix]")
+            .replace(/ *\[[^\]]*\] */g, "")
+            // Remove version descriptions (e.g., "Song - Acoustic")
+            .replace(/\s-\s.*/, "")
+            // Remove single and double quotes
+            .replace(/['"]/g, "")
+            // Trim whitespace and convert to lowercase
+            .trim()
+            .toLowerCase();
     }
+
+    const levenshteinDistance = (a: string, b: string): number => {
+        if (a.length === 0) return b.length;
+        if (b.length === 0) return a.length;
+
+        const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+
+        for (let i = 0; i <= a.length; i++) {
+            matrix[0][i] = i;
+        }
+
+        for (let j = 0; j <= b.length; j++) {
+            matrix[j][0] = j;
+        }
+
+        for (let j = 1; j <= b.length; j++) {
+            for (let i = 1; i <= a.length; i++) {
+                const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                matrix[j][i] = Math.min(
+                    matrix[j][i - 1] + 1,         // Deletion
+                    matrix[j - 1][i] + 1,         // Insertion
+                    matrix[j - 1][i - 1] + cost   // Substitution
+                );
+            }
+        }
+
+        return matrix[b.length][a.length];
+    };
+
+    const calculateSimilarity = (str1: string, str2: string): number => {
+        const maxLength = Math.max(str1.length, str2.length);
+        if (maxLength === 0) return 100;
+
+        const distance = levenshteinDistance(str1, str2);
+        return (1 - distance / maxLength) * 100;
+    };
 
     const submitGuess = async (guess: string) => {
         if (!gameSession || !currentTrack){
@@ -169,7 +216,9 @@ export default function ClassicGamePage() {
         const trackName = trackNameClean(currentTrack.title);
         const userGuess = trackNameClean(guess);
 
-        const correct = trackName === userGuess;
+        const similarity = calculateSimilarity(trackName, userGuess);
+        console.log(`Comparing "${trackName}" with "${userGuess}". Similarity: ${similarity.toFixed(2)}%`);
+        const correct = similarity >= 90; // Only allow the answer if it is at least 90% similar
         const score = correct ? (GameScore.baseScore * (gameSession.difficulty === "easy" ? GameScore.easyMultiplier : gameSession.difficulty === "medium" ? GameScore.mediumMultiplier : GameScore.hardMultiplier)) : 0;
 
 
@@ -255,15 +304,15 @@ export default function ClassicGamePage() {
         switch (gameState) {
             case "waiting":
                 return (
-                    <div className="w-full max-w-3xl dark:bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8 text-center">
-                        <h1>Classic Game Mode</h1>
-                        <p className="mt-4">Welcome to the Classic Game Mode! Click the button below to start playing.</p>
+                    <div className="w-full max-w-3xl dark:bg-gray-700  bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8 text-center">
+                        <h1 className="text-xl font-bold">Classic</h1>
+                        <p className="mt-4">How well do you know your liked songs on spotify?</p>
                         <div className="mt-4">
                             <label className="mr-2 font-bold">Select Difficulty:</label>
                             <select
                                 value={difficulty}
                                 onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-                                className="p-2 rounded-lg"
+                                className="p-2 rounded-lg bg-gray-300 dark:bg-gray-800"
                             >
                                 <option value="easy">Easy (30s preview)</option>
                                 <option value="medium">Medium (20s preview)</option>
@@ -275,7 +324,7 @@ export default function ClassicGamePage() {
                             <select
                                 value={trackAmount}
                                 onChange={(e) => setTrackAmount(parseInt(e.target.value) as TrackAmount)}
-                                className="p-2 rounded-lg"
+                                className="p-2 rounded-lg bg-gray-300 dark:bg-gray-800"
                             >
                                 <option value={5}>5 (Extra Short)</option>
                                 <option value={10}>10 (Short)</option>
@@ -287,7 +336,7 @@ export default function ClassicGamePage() {
 
                         <button
                             onClick={() => startNewGame()}
-                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 font-bold dark:text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-blue-700"
+                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 font-bold text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-blue-700"
                         >
                             Start Game
                         </button>
@@ -295,7 +344,7 @@ export default function ClassicGamePage() {
                 );
             case "playing":
                 return (
-                    <div className="w-full max-w-3xl dark:bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8">
+                    <div className="w-full max-w-3xl dark:bg-gray-700 backdrop-blur-lg rounded-lg shadow-lg p-8">
                         {timeLeft > 0 ? (
                         <div className="text-center">
                             <h2 className="text-2xl font-bold mb-4">Listen to the preview!</h2>
@@ -307,7 +356,7 @@ export default function ClassicGamePage() {
                                         <p>{timeLeft} seconds left</p>
                                         </>
                                     ) : (
-                                        <Button className="p-0" onClick={() => startPlayback(true)}>
+                                        <Button className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 font-bold text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-blue-700" onClick={() => startPlayback(true)}>
                                             Play
                                         </Button>
                                     )}
@@ -374,12 +423,12 @@ export default function ClassicGamePage() {
                 );
             case "ended":
                 return (
-                    <div className="w-full max-w-3xl dark:bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8 text-center">
-                        <h1>Game Over</h1>
+                    <div className="w-full max-w-3xl dark:bg-gray-700  dark:text-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8 text-center">
+                        <h1 className="font-bold text-xl">Game Over</h1>
                         <p className="mt-4">The game has ended. Thanks for playing!</p>
                         <button
                             onClick={() => setGameState("waiting")}
-                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-green-600 px-4 py-2 font-bold dark:text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-green-700"
+                            className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 font-bold dark:text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-blue-700"
                         >
                             Play Again
                         </button>
@@ -391,7 +440,7 @@ export default function ClassicGamePage() {
     };
 
     return (
-        <div className="w-full min-h-screen flex flex-col dark:text-white">
+        <div className="w-full min-h-screen flex flex-col dark:text-white ">
             <audio
                 ref={audioRef}
                 src={undefined}
@@ -401,7 +450,7 @@ export default function ClassicGamePage() {
             ></audio>
 
             {/* Navbar */}
-            <nav className="w-full p-4 bg-black bg-opacity-30 shadow-lg sticky top-0 z-50">
+            <nav className="w-full p-4 bg-gray-100 bg-opacity-80 dark:bg-black darl:bg-opacity-30 shadow-lg sticky top-0 z-50">
                 <div className="container mx-auto flex justify-between items-center">
                     <Button variant="ghost" asChild>
                         <Link href="/protected" className="flex items-center gap-2">
@@ -417,39 +466,39 @@ export default function ClassicGamePage() {
                         <div className="flex items-center gap-2">
                             {gameState === "waiting" && (
                                 <>
-                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-gray-900 bg-gray-500 bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>🏆30</span>
                                     </div>
-                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-gray-900 bg-gray-500 bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>🎮102</span>
                                     </div>
-                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-gray-900 bg-gray-500 bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>💯15.2</span>
                                     </div>
                                 </>
                             )}
                             {gameState === "playing" && (
                             <>
-                                <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                <div className="dark:bg-gray-900 bg-gray-500 bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                     <span>Q: {gameSession ? gameSession.currentIndex + 1 : 0}/{gameSession ? gameSession.tracks.length : 0}</span>
                                 </div>
-                                <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                <div className="dark:bg-gray-900 bg-gray-500 bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                     <span>💯 {gameSession? gameSession.score : 0}</span>
                                 </div>
-                                <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                <div className="dark:bg-gray-900 bg-gray-500 bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                     <span>🔥5</span>
                                 </div>
                             </>
                             )}
                             {gameState === "ended" && (
                                 <>
-                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-gray-900 bg-gray-500 bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>💯: {gameSession ? gameSession.score : 0}</span>
                                     </div>
-                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-gray-900 bg-gray-500 bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>✔️: {gameSession ? gameSession.results.filter(r => r.correct).length : 0}/{gameSession ? gameSession.tracks.length : 0}</span>
                                     </div>
-                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-gray-900 bg-gray-500 bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>🏆: 5</span>
                                     </div>
                                 </>
