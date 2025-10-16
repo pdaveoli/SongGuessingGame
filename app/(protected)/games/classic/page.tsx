@@ -242,10 +242,10 @@ export default function ClassicGamePage() {
 
         if (!spotifyAccessToken) {
             return (
-                <div className="w-full max-w-3xl bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8 text-center">
+                <div className="w-full max-w-3xl dark:bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8 text-center">
                     <h1>Link your Spotify account</h1>
                     <p className="mt-4">You need to link your Spotify account to access this page.</p>
-                    <a href="/protected" className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-4 py-2 font-bold text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-[#1ed760]">
+                    <a href="/protected" className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-4 py-2 font-bold dark:text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-[#1ed760]">
                         Link Spotify
                     </a>
                 </div>
@@ -255,7 +255,7 @@ export default function ClassicGamePage() {
         switch (gameState) {
             case "waiting":
                 return (
-                    <div className="w-full max-w-3xl bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8 text-center">
+                    <div className="w-full max-w-3xl dark:bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8 text-center">
                         <h1>Classic Game Mode</h1>
                         <p className="mt-4">Welcome to the Classic Game Mode! Click the button below to start playing.</p>
                         <div className="mt-4">
@@ -287,7 +287,7 @@ export default function ClassicGamePage() {
 
                         <button
                             onClick={() => startNewGame()}
-                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 font-bold text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-blue-700"
+                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 font-bold dark:text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-blue-700"
                         >
                             Start Game
                         </button>
@@ -295,7 +295,7 @@ export default function ClassicGamePage() {
                 );
             case "playing":
                 return (
-                    <div className="w-full max-w-3xl bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8">
+                    <div className="w-full max-w-3xl dark:bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8">
                         {timeLeft > 0 ? (
                         <div className="text-center">
                             <h2 className="text-2xl font-bold mb-4">Listen to the preview!</h2>
@@ -327,7 +327,7 @@ export default function ClassicGamePage() {
                                 />
                                 <Button
                                     onClick={() => submitGuess(answer)}
-                                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-purple-600 px-4 py-2 font-bold text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-purple-700"
+                                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-purple-600 px-4 py-2 font-bold dark:text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-purple-700"
                                 >
                                     Submit Answer
                                 </Button>
@@ -359,7 +359,7 @@ export default function ClassicGamePage() {
                                                     }
                                                 }
                                             }}
-                                            className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 font-bold text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-blue-700"
+                                            className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 font-bold dark:text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-blue-700"
                                         >
                                             Next
                                         </Button>
@@ -374,12 +374,12 @@ export default function ClassicGamePage() {
                 );
             case "ended":
                 return (
-                    <div className="w-full max-w-3xl bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8 text-center">
+                    <div className="w-full max-w-3xl dark:bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8 text-center">
                         <h1>Game Over</h1>
                         <p className="mt-4">The game has ended. Thanks for playing!</p>
                         <button
                             onClick={() => setGameState("waiting")}
-                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-green-600 px-4 py-2 font-bold text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-green-700"
+                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-green-600 px-4 py-2 font-bold dark:text-white shadow-lg transition-all duration-200 ease-in-out hover:scale-105 hover:bg-green-700"
                         >
                             Play Again
                         </button>
@@ -391,7 +391,7 @@ export default function ClassicGamePage() {
     };
 
     return (
-        <div className="w-full min-h-screen flex flex-col text-white">
+        <div className="w-full min-h-screen flex flex-col dark:text-white">
             <audio
                 ref={audioRef}
                 src={undefined}
@@ -417,39 +417,39 @@ export default function ClassicGamePage() {
                         <div className="flex items-center gap-2">
                             {gameState === "waiting" && (
                                 <>
-                                    <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>🏆30</span>
                                     </div>
-                                    <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>🎮102</span>
                                     </div>
-                                    <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>💯15.2</span>
                                     </div>
                                 </>
                             )}
                             {gameState === "playing" && (
                             <>
-                                <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                     <span>Q: {gameSession ? gameSession.currentIndex + 1 : 0}/{gameSession ? gameSession.tracks.length : 0}</span>
                                 </div>
-                                <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                     <span>💯 {gameSession? gameSession.score : 0}</span>
                                 </div>
-                                <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                     <span>🔥5</span>
                                 </div>
                             </>
                             )}
                             {gameState === "ended" && (
                                 <>
-                                    <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>💯: {gameSession ? gameSession.score : 0}</span>
                                     </div>
-                                    <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>✔️: {gameSession ? gameSession.results.filter(r => r.correct).length : 0}/{gameSession ? gameSession.tracks.length : 0}</span>
                                     </div>
-                                    <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                                    <div className="dark:bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
                                         <span>🏆: 5</span>
                                     </div>
                                 </>
