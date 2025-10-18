@@ -66,7 +66,7 @@ export default function ProtectedPage() {
     if (!spotifyAccessToken && loading == false) {
         return (
             <div className="w-full min-h-screen flex flex-col items-center justify-center text-white p-6 md:p-10">
-                <div className="w-full max-w-3xl bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8">
+                <div className="w-full max-w-3xl bg-card/80 border border-border/25 backdrop-blur-lg rounded-lg shadow-lg p-8 text-card-foreground">
                     <h1>Link your spotify account</h1>
                     <p className="mt-4">You need to link your Spotify account to access this page.</p>
                     <form onSubmit={handleSpotifySignUp}>
@@ -87,7 +87,7 @@ export default function ProtectedPage() {
     if (spotifyAccessToken && !loading) {
         return (
             <div className="w-full min-h-screen flex flex-col items-center justify-center text-white p-6 md:p-10">
-                <div className="w-full max-w-3xl bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8">
+                <div className="w-full max-w-3xl bg-card/80 border border-border/25 backdrop-blur-lg rounded-lg shadow-lg p-8 text-card-foreground">
                     <h1 className="text-4xl font-bold mb-6 text-center">Protected Page</h1>
                     <div className="bg-white bg-opacity-10 rounded-lg p-6">
                         <h2 className="text-2xl font-semibold mb-4">User Information</h2>
@@ -126,8 +126,8 @@ export default function ProtectedPage() {
 
 
     return (
-            <div className="w-full min-h-screen flex flex-col items-center justify-center text-white p-6 md:p-10">
-                <div className="w-full max-w-3xl bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg p-8">
+            <div className="w-full min-h-screen flex flex-col items-center justify-center p-6 md:p-10">
+                <div className="w-full max-w-3xl bg-card/80 border border-border/25 backdrop-blur-lg rounded-lg shadow-lg p-8 text-card-foreground">
                     <h1 className="text-4xl font-bold mb-6 text-center">Loading...</h1>
                     <div className="flex items-center justify-center mb-6">
                         <AiOutlineLoading3Quarters className="w-6 h-6 mr-2 animate-spin"/>

@@ -4,6 +4,34 @@
 
 @layer base {
   :root {
+      --background: 210 16% 96%;
+      --background-2: 210 12% 98%;
+      --foreground: 210 10% 12%;
+      --card: 0 0% 100%;
+      --card-foreground: 210 10% 12%;
+      --glass: 210 16% 98%;
+      --border: 210 14% 88%;
+
+      /* Primary: Spotify green (HSL from #1DB954) */
+      --primary: 141 73% 42%;
+      --primary-foreground: 0 0% 98%;
+
+      /* Accent (kept optional) */
+      --accent: 272 68% 59%;
+
+      /* Supporting tokens */
+      --muted: 220 8% 88%;
+      --muted-foreground: 220 8% 55%;
+      --destructive: 0 78% 55%;
+      --ring: 141 73% 35%;
+      --radius: 0.75rem;
+
+      --chart-1: 141 73% 42%;
+      --chart-2: 272 68% 59%;
+      --chart-3: 200 60% 40%;
+      --chart-4: 40 90% 55%;
+      --chart-5: 330 75% 55%;
+      /*
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -29,8 +57,35 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+  */
   }
   .dark {
+      /* Dark theme */
+      --background: 220 10% 6%;
+      --background-2: 220 12% 8%;
+      --foreground: 0 0% 96%;
+      --card: 220 12% 10%;
+      --card-foreground: 0 0% 96%;
+      --glass: 220 12% 8%;
+      --border: 220 12% 14%;
+
+      --primary: 141 73% 42%;
+      --primary-foreground: 0 0% 98%;
+
+      --accent: 272 68% 59%;
+
+      --muted: 220 12% 14%;
+      --muted-foreground: 220 12% 48%;
+      --destructive: 0 62% 40%;
+      --ring: 141 73% 30%;
+      --radius: 0.75rem;
+
+      --chart-1: 141 73% 42%;
+      --chart-2: 272 68% 59%;
+      --chart-3: 200 60% 40%;
+      --chart-4: 40 90% 55%;
+      --chart-5: 330 75% 55%;
+    /*
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
@@ -55,14 +110,109 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    */
   }
+
 }
 
+/* No global glow here — add glow on individual components instead */
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+    * {
+        @apply border-border;
+        box-sizing: border-box;
+    }
+
+    html, body, #__next, #root {
+        height: 100%;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        /* keep background subtle and neutral; no colored radial glows */
+        background-image:
+                linear-gradient(180deg, hsl(var(--background)), hsl(var(--background-2)));
+        background-attachment: fixed;
+        min-height: 100%;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* glassmorphism card — subtle shadow only, no colored glow */
+    .card {
+        @apply bg-card text-card-foreground rounded-lg;
+        background: linear-gradient(180deg, hsl(var(--card) / 0.85), hsl(var(--card) / 0.7));
+        border: 1px solid hsl(var(--border) / 0.25);
+        box-shadow:
+                0 8px 24px rgba(2,6,23,0.5);
+        backdrop-filter: blur(8px) saturate(110%);
+        padding: 1rem;
+    }
+
+    /* lighter glass (panels) */
+    .glass {
+        @apply rounded-md;
+        background: linear-gradient(180deg, hsl(var(--glass) / 0.6), hsl(var(--glass) / 0.35));
+        border: 1px solid hsl(var(--border) / 0.18);
+        backdrop-filter: blur(6px);
+    }
+
+    /* Primary button — no glow; uses Spotify green */
+    .btn-neon {
+        @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-semibold;
+        color: hsl(var(--primary-foreground));
+        background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.92));
+        box-shadow:
+                0 4px 12px rgba(2,6,23,0.45);
+        transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    .btn-neon:hover {
+        transform: translateY(-2px);
+        box-shadow:
+                0 10px 24px rgba(2,6,23,0.5);
+    }
+
+    /* Ghost button */
+    .btn-ghost {
+        @apply inline-flex items-center justify-center px-3 py-1.5 rounded-md font-medium;
+        color: hsl(var(--primary));
+        background: transparent;
+        border: 1px solid hsl(var(--border) / 0.18);
+        box-shadow: 0 6px 14px rgba(2,6,23,0.25);
+        transition: box-shadow .12s ease, transform .12s ease;
+    }
+    .btn-ghost:hover {
+        box-shadow: 0 12px 28px rgba(2,6,23,0.28);
+        transform: translateY(-2px);
+    }
+
+    /* Headings / emphasis use primary color, no text-shadow */
+    .neon-text {
+        color: hsl(var(--primary));
+        text-shadow: none;
+    }
+
+    /* Accent helper (no glow) */
+    .accent-glow {
+        box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    }
+
+    /* Soft borders for form elements */
+    .soft-border {
+        border: 1px solid hsl(var(--border) / 0.25);
+        background: linear-gradient(180deg, hsl(var(--glass) / 0.55), hsl(var(--glass) / 0.38));
+        border-radius: var(--radius);
+        padding: 0.5rem;
+    }
+
+    /* Focus / accessibility — subtle ring, no colored glow */
+    :focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 4px hsl(var(--ring) / 0.08);
+        border-radius: 6px;
+    }
+
+    .divider-weak {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, hsl(var(--border) / 0.35), transparent);
+    }
 }
