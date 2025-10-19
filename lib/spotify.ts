@@ -1,6 +1,6 @@
 "use client";
 import { createClient } from "./supabase/client";
-import {SpotifyTrack, SpotifyUserTracksResponse} from "@/types/spotifyT";
+import {SpotifyTrack, SpotifyUserTracksResponse, SpotifyImage, SpotifyExternalUrls} from "@/types/spotifyT";
 import { useApp } from "@/context/AppProvider";
 /*
 // Get the spotify env variables
@@ -136,4 +136,88 @@ export const getRandomUserSavedTracks = async (accessToken: string, count: numbe
     }
 
     return tracks;
+}
+
+export interface SpotifyArtistFull {
+    id: string;
+    name: string;
+    images: SpotifyImage[];
+    followers: {
+        total: number;
+    };
+    genres: string[];
+    popularity: number;
+    external_urls: SpotifyExternalUrls;
+}
+
+export interface SpotifyArtistSearchResponse {
+    artists: {
+        href: string;
+        items: SpotifyArtistFull[];
+        limit: number;
+        next: string | null;
+        offset: number;
+        previous: string | null;
+        total: number;
+    };
+}
+
+export const searchArtists = async (accessToken: string, query: string, limit: number = 10): Promise<SpotifyArtistFull[] | null> => {
+    if (!query.trim()) {
+        return [];
+    }
+
+    try {
+        const response = await fetch(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=artist&limit=${limit}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        if (response.status === 401) {
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error(`Failed to search artists: ${response.status}`);
+        }
+
+        const data: SpotifyArtistSearchResponse = await response.json();
+        return data.artists.items;
+    } catch (error) {
+        console.error('searchArtists error:', error);
+        throw error;
+    }
+}
+
+export const getArtistTopTracks = async (accessToken: string, artistId: string, market: string = 'US'): Promise<SpotifyTrack[] | null> => {
+    try {
+        const response = await fetch(
+            `https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=${market}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        if (response.status === 401) {
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch artist top tracks: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.tracks;
+    } catch (error) {
+        console.error('getArtistTopTracks error:', error);
+        throw error;
+    }
 }

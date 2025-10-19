@@ -3,14 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { useApp } from "@/context/AppProvider";
 import { GameState, Difficulty, Track, TrackAmount, GameSession } from "@/types/gameT";
-import { getRandomUserSavedTracks } from "@/lib/spotify";
+import { searchArtists, getArtistTopTracks, SpotifyArtistFull } from "@/lib/spotify";
 import { getDeezerPreview } from "@/lib/deezer";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { IoMdArrowRoundBack, IoMdPerson } from "react-icons/io";
 import { GameContainer, GameStateData } from "@/components/GameContainer";
+import { ArtistSelector } from "@/components/ArtistSelector";
 
-export default function ClassicGamePage() {
+export default function ArtistGamePage() {
     const { user, loading, spotifyAccessToken, refreshSpotifyToken } = useApp();
     const [viewState, setViewState] = useState<GameState>("waiting");
     const [difficulty, setDifficulty] = useState<Difficulty>("hard");
@@ -18,6 +19,7 @@ export default function ClassicGamePage() {
     const [gameTracks, setGameTracks] = useState<Track[]>([]);
     const [isFetchingTracks, setIsFetchingTracks] = useState<boolean>(false);
     const [gameStats, setGameStats] = useState<GameStateData | null>(null);
+    const [selectedArtists, setSelectedArtists] = useState<SpotifyArtistFull[]>([]);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -41,7 +43,41 @@ export default function ClassicGamePage() {
         }
     }, []);
 
+    const handleSearchArtists = async (query: string): Promise<SpotifyArtistFull[]> => {
+        let activeToken = spotifyAccessToken;
+        if (!activeToken) {
+            activeToken = await refreshSpotifyToken();
+            if (!activeToken) {
+                return [];
+            }
+        }
+
+        const results = await searchArtists(activeToken, query, 20);
+        if (results === null) {
+            // Token might be expired, try refreshing
+            activeToken = await refreshSpotifyToken();
+            if (!activeToken) return [];
+
+            const retryResults = await searchArtists(activeToken, query, 20);
+            return retryResults || [];
+        }
+        return results;
+    };
+
+    const handleSelectArtist = (artist: SpotifyArtistFull) => {
+        setSelectedArtists(prev => [...prev, artist]);
+    };
+
+    const handleRemoveArtist = (artistId: string) => {
+        setSelectedArtists(prev => prev.filter(a => a.id !== artistId));
+    };
+
     const startNewGame = async () => {
+        if (selectedArtists.length === 0) {
+            alert("Please select at least one artist.");
+            return;
+        }
+
         setIsFetchingTracks(true);
         let activeToken = spotifyAccessToken;
         if (!activeToken) {
@@ -54,31 +90,50 @@ export default function ClassicGamePage() {
         }
 
         try {
-            let tracks = await getRandomUserSavedTracks(activeToken, trackAmount);
-            if (!tracks) {
-                // Try and refresh token once more
-                activeToken = await refreshSpotifyToken();
-                if (!activeToken) {
-                    alert("Failed to refresh Spotify token.");
-                    setIsFetchingTracks(false);
-                    return;
-                }
-                tracks = await getRandomUserSavedTracks(activeToken, trackAmount);
+            // Fetch top tracks from all selected artists
+            const allTracks: Track[] = [];
+
+            for (const artist of selectedArtists) {
+                let tracks = await getArtistTopTracks(activeToken, artist.id);
                 if (!tracks) {
-                    alert("Failed to fetch tracks from Spotify.");
-                    setIsFetchingTracks(false);
-                    return;
+                    // Try refreshing token once more
+                    activeToken = await refreshSpotifyToken();
+                    if (!activeToken) {
+                        alert("Failed to refresh Spotify token.");
+                        setIsFetchingTracks(false);
+                        return;
+                    }
+                    tracks = await getArtistTopTracks(activeToken, artist.id);
+                    if (!tracks) {
+                        alert(`Failed to fetch tracks for ${artist.name}.`);
+                        continue;
+                    }
                 }
+
+                // Convert to Track format
+                const convertedTracks = tracks.map((t): Track => ({
+                    id: t.id,
+                    album: t.album,
+                    title: t.name,
+                    artist: t.artists.map(a => a.name).join(", "),
+                    albumArt: t.album.images[0]?.url || "",
+                    previewUrl: "",
+                }));
+
+                allTracks.push(...convertedTracks);
             }
 
-            setGameTracks(tracks.map((t): Track => ({
-                id: t.id,
-                album: t.album,
-                title: t.name,
-                artist: t.artists.map(a => a.name).join(", "),
-                albumArt: t.album.images[0]?.url || "",
-                previewUrl: "",
-            })));
+            if (allTracks.length === 0) {
+                alert("No tracks found for the selected artists.");
+                setIsFetchingTracks(false);
+                return;
+            }
+
+            // Shuffle and select random tracks
+            const shuffled = allTracks.sort(() => Math.random() - 0.5);
+            const selectedTracks = shuffled.slice(0, Math.min(trackAmount, allTracks.length));
+
+            setGameTracks(selectedTracks);
             setViewState("playing");
         } catch (error) {
             console.error("Error fetching tracks:", error);
@@ -134,28 +189,44 @@ export default function ClassicGamePage() {
         }
 
         return (
-            <div className="w-full max-w-3xl bg-card/80 border border-border/25 backdrop-blur-lg rounded-lg shadow-lg p-8 text-card-foreground flex items-center flex-col">
-                <h1 className="text-xl font-bold">Classic</h1>
-                <p className="mt-4 text-center">How well do you know your liked songs on Spotify?</p>
-                <div className="mt-8 w-full flex flex-col md:flex-row md:justify-center items-center gap-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
-                        <label htmlFor="difficulty-select" className="font-bold shrink-0">Difficulty:</label>
+            <div className="w-full max-w-3xl bg-card/80 border border-border/25 backdrop-blur-lg rounded-lg shadow-lg p-8 text-card-foreground">
+                <div className="flex flex-col items-center mb-6">
+                    <h1 className="text-xl font-bold">Artist Test</h1>
+                    <p className="mt-2 text-center text-sm sm:text-base">Do you really know an artist? See how many of an artist's songs you know!</p>
+                </div>
+
+                {/* Artist Selector */}
+                <div className="mb-6">
+                    <ArtistSelector
+                        onSearch={handleSearchArtists}
+                        selectedArtists={selectedArtists}
+                        onSelectArtist={handleSelectArtist}
+                        onRemoveArtist={handleRemoveArtist}
+                        multiSelect={true}
+                        maxSelections={5}
+                    />
+                </div>
+
+                {/* Game Settings */}
+                <div className="mt-6 flex flex-col sm:flex-row sm:justify-center items-stretch sm:items-center gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 sm:flex-initial">
+                        <label htmlFor="difficulty-select" className="font-bold shrink-0 text-sm">Difficulty:</label>
                         <select
                             id="difficulty-select" value={difficulty}
                             onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-                            className="p-2 rounded-lg bg-gray-300 dark:bg-gray-800 w-full"
+                            className="p-2 rounded-lg bg-gray-300 dark:bg-gray-800 w-full sm:w-auto"
                         >
                             <option value="easy">Easy (30s)</option>
                             <option value="medium">Medium (20s)</option>
                             <option value="hard">Hard (10s)</option>
                         </select>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
-                        <label htmlFor="track-amount-select" className="font-bold shrink-0">Tracks:</label>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 sm:flex-initial">
+                        <label htmlFor="track-amount-select" className="font-bold shrink-0 text-sm">Tracks:</label>
                         <select
                             id="track-amount-select" value={trackAmount}
                             onChange={(e) => setTrackAmount(parseInt(e.target.value) as TrackAmount)}
-                            className="p-2 rounded-lg bg-gray-300 dark:bg-gray-800 w-full"
+                            className="p-2 rounded-lg bg-gray-300 dark:bg-gray-800 w-full sm:w-auto"
                         >
                             <option value={5}>5</option>
                             <option value={10}>10</option>
@@ -165,7 +236,12 @@ export default function ClassicGamePage() {
                         </select>
                     </div>
                 </div>
-                <Button onClick={startNewGame} className="mt-8">
+
+                <Button
+                    onClick={startNewGame}
+                    className="mt-6 w-full sm:w-auto sm:min-w-[200px] mx-auto block"
+                    disabled={selectedArtists.length === 0}
+                >
                     Start Game
                 </Button>
             </div>
@@ -179,7 +255,7 @@ export default function ClassicGamePage() {
                     <Button variant="ghost" asChild>
                         <Link href="/protected" className="flex items-center gap-2">
                             <IoMdArrowRoundBack/>
-                            <h1 className="text-xl font-bold">Classic Mode</h1>
+                            <h1 className="text-xl font-bold">Artist Mode</h1>
                         </Link>
                     </Button>
                     <div className="flex items-center gap-4">

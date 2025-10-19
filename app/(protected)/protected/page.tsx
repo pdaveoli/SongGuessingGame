@@ -112,9 +112,14 @@ export default function ProtectedPage() {
                                 </form>
                             </div>
                         )}
-                        <Button asChild>
-                            <Link href="/games/classic">Play Game</Link>
+                        <div className="my-4 border-t border-border/50"></div>
+                        <Button asChild className="m-2">
+                            <Link href="/games/classic">Play Classic (Liked songs)</Link>
                         </Button>
+                        <Button asChild className="m-2">
+                            <Link href="/games/artist">Play Artist Guess</Link>
+                        </Button>
+                        <div className="my-4 border-t border-border/50"></div>
                         <Button onClick={logout}>
                             Log out
                         </Button>

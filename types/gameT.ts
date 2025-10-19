@@ -1,5 +1,23 @@
+import {SpotifyArtist, SpotifyExternalUrls, SpotifyImage} from "@/types/spotifyT";
+
+export interface Album {
+    album_type: "album" | "single" | "compilation";
+    artists: SpotifyArtist[];
+    external_urls: SpotifyExternalUrls;
+    href: string;
+    id: string;
+    images: SpotifyImage[];
+    is_playable: boolean;
+    name: string;
+    release_date: string;
+    release_date_precision: "year" | "month" | "day";
+    total_tracks: number;
+    type: "album";
+    uri: string;
+}
 export type Track = {
     id: string;
+    album: Album
     title: string;
     artist: string;
     albumArt: string;
@@ -8,6 +26,8 @@ export type Track = {
 export type QuestionResult = {
     trackId: string;
     userAnswer: string;
+    skipped: boolean;
+    hintsUsed: number;
     correct: boolean;
     score: number;
 }

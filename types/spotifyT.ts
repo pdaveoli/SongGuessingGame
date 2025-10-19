@@ -15,9 +15,11 @@ export interface SpotifyExternalIds {
 }
 
 export interface SpotifyArtist {
-    images: any;
-    genres: any;
-    followers: any;
+    images?: SpotifyImage[];
+    genres?: string[];
+    followers?: {
+        total: number;
+    };
     external_urls: SpotifyExternalUrls;
     href: string;
     id: string;
@@ -78,4 +80,3 @@ export interface SpotifyUserTracksResponse {
     previous: string | null;
     total: number;
 }
-
