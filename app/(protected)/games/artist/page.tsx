@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useApp } from "@/context/AppProvider";
 import { GameState, Difficulty, Track, TrackAmount, GameSession } from "@/types/gameT";
-import { searchArtists, getArtistTopTracks, SpotifyArtistFull } from "@/lib/spotify";
+import { searchArtists, getExtendedArtistTracks, SpotifyArtistFull } from "@/lib/spotify";
 import { getDeezerPreview } from "@/lib/deezer";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -90,11 +90,14 @@ export default function ArtistGamePage() {
         }
 
         try {
-            // Fetch top tracks from all selected artists
+            // Fetch tracks from all selected artists
             const allTracks: Track[] = [];
 
+            // Calculate how many tracks to fetch per artist
+            const tracksPerArtist = Math.ceil(trackAmount / selectedArtists.length);
+
             for (const artist of selectedArtists) {
-                let tracks = await getArtistTopTracks(activeToken, artist.id);
+                let tracks = await getExtendedArtistTracks(activeToken, artist.id, tracksPerArtist);
                 if (!tracks) {
                     // Try refreshing token once more
                     activeToken = await refreshSpotifyToken();
@@ -103,7 +106,7 @@ export default function ArtistGamePage() {
                         setIsFetchingTracks(false);
                         return;
                     }
-                    tracks = await getArtistTopTracks(activeToken, artist.id);
+                    tracks = await getExtendedArtistTracks(activeToken, artist.id, tracksPerArtist);
                     if (!tracks) {
                         alert(`Failed to fetch tracks for ${artist.name}.`);
                         continue;

@@ -221,3 +221,135 @@ export const getArtistTopTracks = async (accessToken: string, artistId: string, 
         throw error;
     }
 }
+
+interface SpotifyAlbum {
+    id: string;
+    name: string;
+    album_type: string;
+    total_tracks: number;
+    release_date: string;
+}
+
+interface SpotifyArtistAlbumsResponse {
+    items: SpotifyAlbum[];
+    next: string | null;
+    total: number;
+}
+
+export const getArtistAlbums = async (accessToken: string, artistId: string, limit: number = 50): Promise<SpotifyAlbum[] | null> => {
+    try {
+        const response = await fetch(
+            `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&limit=${limit}&market=US`,
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        if (response.status === 401) {
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch artist albums: ${response.status}`);
+        }
+
+        const data: SpotifyArtistAlbumsResponse = await response.json();
+        return data.items;
+    } catch (error) {
+        console.error('getArtistAlbums error:', error);
+        throw error;
+    }
+}
+
+interface SpotifyAlbumTracksResponse {
+    items: SpotifyTrack[];
+    next: string | null;
+    total: number;
+}
+
+export const getAlbumTracks = async (accessToken: string, albumId: string): Promise<SpotifyTrack[] | null> => {
+    try {
+        const response = await fetch(
+            `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`,
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        if (response.status === 401) {
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch album tracks: ${response.status}`);
+        }
+
+        const data: SpotifyAlbumTracksResponse = await response.json();
+        return data.items;
+    } catch (error) {
+        console.error('getAlbumTracks error:', error);
+        throw error;
+    }
+}
+
+export const getExtendedArtistTracks = async (accessToken: string, artistId: string, maxTracks: number = 50): Promise<SpotifyTrack[] | null> => {
+    try {
+        // First get top tracks (up to 10)
+        const topTracks = await getArtistTopTracks(accessToken, artistId);
+        if (topTracks === null) {
+            return null;
+        }
+
+        const allTracks: SpotifyTrack[] = [...topTracks];
+        const trackIds = new Set(topTracks.map(t => t.id));
+
+        // If we need more tracks, fetch from albums
+        if (allTracks.length < maxTracks) {
+            const albums = await getArtistAlbums(accessToken, artistId);
+            if (albums === null) {
+                return null;
+            }
+
+            // Shuffle albums to get variety
+            const shuffledAlbums = albums.sort(() => Math.random() - 0.5);
+
+            for (const album of shuffledAlbums) {
+                if (allTracks.length >= maxTracks) break;
+
+                const albumTracks = await getAlbumTracks(accessToken, album.id);
+                if (albumTracks === null) continue;
+
+                // Add tracks that we haven't seen yet
+                for (const track of albumTracks) {
+                    if (allTracks.length >= maxTracks) break;
+                    if (!trackIds.has(track.id)) {
+                        // Album tracks don't have full album info, so we need to add it
+                        const enrichedTrack: SpotifyTrack = {
+                            ...track,
+                            album: track.album || {
+                                id: album.id,
+                                name: album.name,
+                                images: [],
+                                release_date: album.release_date,
+                                total_tracks: album.total_tracks,
+                            }
+                        };
+                        allTracks.push(enrichedTrack);
+                        trackIds.add(track.id);
+                    }
+                }
+            }
+        }
+
+        return allTracks;
+    } catch (error) {
+        console.error('getExtendedArtistTracks error:', error);
+        throw error;
+    }
+}
