@@ -306,7 +306,7 @@ export const getExtendedArtistTracks = async (accessToken: string, artistId: str
             return null;
         }
 
-        const allTracks: SpotifyTrack[] = [...topTracks];
+        const allTracks: SpotifyTrack[] = [...topTracks.slice(0,5)];
         const trackIds = new Set(topTracks.map(t => t.id));
 
         // If we need more tracks, fetch from albums
